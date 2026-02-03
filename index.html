@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Budget Lila</title>
+
+  <style>
+    :root{
+      --bg:#0b0b12; --bg2:#05050a;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(255,255,255,.08);
+      --border:rgba(170,110,255,.38);
+      --purple:#a55cff;
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --ok:#31d0aa;
+      --bad:#ff4d6d;
+      --shadow:0 18px 55px rgba(0,0,0,.55);
+      --r:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      min-height:100vh; padding:22px;
+      background:
+        radial-gradient(900px 520px at 15% 10%, rgba(165,92,255,.35), transparent 60%),
+        radial-gradient(820px 520px at 85% 25%, rgba(192,132,255,.24), transparent 58%),
+        radial-gradient(900px 600px at 50% 95%, rgba(165,92,255,.18), transparent 60%),
+        linear-gradient(180deg, var(--bg2), var(--bg) 45%, #05050a);
+    }
+    .wrap{max-width:1100px;margin:0 auto}
+    header{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap}
+    h1{margin:0;font-size:28px;line-height:1.1}
+    .sub{color:var(--muted);font-size:14px;margin-top:6px}
+
+    .pill{
+      display:flex;gap:10px;align-items:center;
+      padding:10px 12px;border-radius:999px;
+      background:rgba(165,92,255,.10);
+      border:1px solid rgba(165,92,255,.30);
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      white-space:nowrap;
+      flex-wrap:wrap;
+    }
+    label{font-size:12px;color:var(--muted)}
+    select,input,textarea{
+      width:100%;
+      padding:10px 12px;border-radius:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text); outline:none;
+    }
+    textarea{min-height:84px;resize:vertical}
+    select:focus,input:focus,textarea:focus{
+      border-color:rgba(165,92,255,.85);
+      box-shadow:0 0 0 4px rgba(165,92,255,.16);
+    }
+
+    .msg{
+      display:none;
+      margin:12px 0 16px;
+      padding:12px 14px;border-radius:14px;
+      border:1px solid rgba(165,92,255,.35);
+      background:rgba(165,92,255,.10);
+      color:rgba(255,255,255,.9);
+    }
+
+    .grid{display:grid;grid-template-columns:380px 1fr;gap:16px}
+    @media (max-width: 920px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .ch{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;
+      padding:16px 16px 10px;
+      border-bottom:1px solid rgba(165,92,255,.18);
+      flex-wrap:wrap;
+    }
+    .ch h2{
+      margin:0; font-size:14px;
+      letter-spacing:.9px; text-transform:uppercase;
+      font-family:var(--mono); color:rgba(255,255,255,.84);
+    }
+    .cb{padding:16px}
+
+    .badge{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:3px 8px;border-radius:999px;
+      border:1px solid rgba(165,92,255,.35);
+      background:rgba(165,92,255,.10);
+      color:rgba(255,255,255,.88);
+      white-space:nowrap;
+    }
+
+    .stats{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px
+    }
+    @media (max-width: 520px){ .stats{grid-template-columns:1fr} }
+    .stat{
+      background:var(--panel2);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:12px 12px 10px;
+    }
+    .k{color:var(--muted);font-size:12px;margin-bottom:6px}
+    .v{font-size:20px;font-weight:850}
+    .v.ok{color:var(--ok)}
+    .v.bad{color:var(--bad)}
+
+    form{display:flex;flex-direction:column;gap:10px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width: 520px){ .row{grid-template-columns:1fr} }
+
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+    button{
+      cursor:pointer;
+      padding:10px 14px;border-radius:14px;
+      border:1px solid rgba(165,92,255,.45);
+      background:linear-gradient(180deg, rgba(165,92,255,.26), rgba(165,92,255,.12));
+      color:var(--text);
+      font-weight:750;
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+    }
+    .ghost{
+      background:rgba(255,255,255,.05);
+      border-color:rgba(255,255,255,.14);
+      box-shadow:none;
+      color:rgba(255,255,255,.86);
+    }
+    .danger{
+      background:rgba(255,77,109,.10);
+      border-color:rgba(255,77,109,.35);
+      box-shadow:none;
+    }
+
+    .list{display:flex;flex-direction:column;gap:10px}
+    .empty{
+      padding:18px;border-radius:16px;
+      border:1px dashed rgba(165,92,255,.35);
+      background:rgba(165,92,255,.06);
+      color:rgba(255,255,255,.70);
+    }
+    .item{
+      display:grid;grid-template-columns:12px 1fr auto;
+      gap:12px;align-items:start;
+      padding:12px;border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+    }
+    .dot{width:10px;height:10px;border-radius:999px;margin-top:5px}
+    .dot.in{background:var(--ok); box-shadow:0 0 0 4px rgba(49,208,170,.14)}
+    .dot.out{background:var(--bad); box-shadow:0 0 0 4px rgba(255,77,109,.14)}
+    .meta{min-width:0;display:flex;flex-direction:column;gap:4px}
+    .line1{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+    .amount{font-weight:900}
+    .date{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.58)}
+    .desc{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+    .iconbtn{
+      padding:8px 10px;border-radius:12px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.86);
+      box-shadow:none;
+      font-weight:850;
+    }
+
+    .chartbox{
+      margin-bottom:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      padding:10px;
+    }
+    canvas{display:block;width:100%}
+
+	/* Fix: Dropdowns in der Header-Pill sollen NICHT 100% Breite nehmen */
+.pill select{
+  width: auto;
+  min-width: 160px;
+  max-width: 42vw;
+}
+
+.pill label{
+  margin-right: 2px;
+}
+
+@media (max-width: 520px){
+  .pill select{
+    min-width: 140px;
+    max-width: 80vw;
+  }
+}
+
+  </style>
+</head>
+
+
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Budget Lila</h1>
+        <div class="sub">Zeiträume: <b>13.</b> bis <b>12.</b> (Gehalt-Zyklus). Diagramm + Personen.</div>
+      </div>
+
+      <div class="pill" style="gap:12px">
+        <label for="personSelect">Person</label>
+        <select id="personSelect"></select>
+
+        <span style="opacity:.35">|</span>
+
+        <label for="periodSelect">Zeitraum</label>
+        <select id="periodSelect"></select>
+      </div>
+    </header>
+
+    <div id="msg" class="msg"></div>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <section class="card">
+        <div class="ch">
+          <h2>Eintrag hinzufügen</h2>
+          <span class="badge" id="countBadge">0 Einträge</span>
+        </div>
+        <div class="cb">
+          <div class="stats">
+            <div class="stat"><div class="k">Einnahmen</div><div class="v ok" id="sumIn">0,00 €</div></div>
+            <div class="stat"><div class="k">Ausgaben</div><div class="v bad" id="sumOut">0,00 €</div></div>
+            <div class="stat"><div class="k">Saldo</div><div class="v" id="saldo">0,00 €</div></div>
+          </div>
+
+          <form id="entryForm" autocomplete="off">
+            <div class="row">
+              <select id="type" required>
+                <option value="out">Ausgabe</option>
+                <option value="in">Einnahme</option>
+              </select>
+
+              <!-- text: akzeptiert 12,50 und 12.50 -->
+              <input id="amount" type="text" inputmode="decimal" placeholder="Betrag (z.B. 12,50)" required />
+            </div>
+
+            <div class="row">
+              <select id="category" required>
+                <option value="" disabled selected>Kategorie wählen</option>
+                <option>Kredit</option>
+                <option>Gehalt</option>
+                <option>Vertrag</option>
+                <option>Miete</option>
+                <option>Lebensmittel</option>
+                <option>Auto/Moped</option>
+                <option>Freizeit</option>
+                <option>Sonstiges</option>
+              </select>
+
+              <input id="date" type="date" required />
+            </div>
+
+            <textarea id="desc" placeholder="Beschreibung (optional), z.B. 'Handyvertrag'"></textarea>
+
+            <div class="btns">
+              <button type="submit">Speichern</button>
+              <button type="button" class="ghost" id="resetBtn">Zurücksetzen</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <section class="card">
+        <div class="ch">
+          <h2>Diagramm & Liste</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="ghost" id="exportBtn" type="button">Export Zeitraum (JSON)</button>
+            <button class="danger" id="wipeBtn" type="button">Alles löschen</button>
+          </div>
+        </div>
+        <div class="cb">
+          <div class="chartbox">
+            <canvas id="chart" height="160"></canvas>
+          </div>
+          <div id="list" class="list"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    // =========================
+    // IMPORTANT: DATA SAFETY
+    // - DB_NAME unchanged
+    // - Stores unchanged
+    // - No deletion/migration of existing entries
+    // =========================
+
+    // ---------- Helpers ----------
+    const EUR = new Intl.NumberFormat("de-DE", { style:"currency", currency:"EUR" });
+    const pad2 = (n) => String(n).padStart(2,"0");
+    const toISO = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+    const fromISO = (s) => {
+      const [y,m,d] = s.split("-").map(Number);
+      return new Date(y, m-1, d);
+    };
+    const parseAmount = (raw) => {
+      const s = String(raw||"").trim().replace(/\s+/g,"").replace(",", ".");
+      const n = Number(s);
+      if(!Number.isFinite(n) || n <= 0) return null;
+      return Math.round(n*100)/100;
+    };
+    const genId = () => `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+    // ---------- UI ----------
+    const msgEl = document.getElementById("msg");
+    const personSelect = document.getElementById("personSelect");
+    const periodSelect = document.getElementById("periodSelect");
+
+    const listEl = document.getElementById("list");
+    const sumInEl = document.getElementById("sumIn");
+    const sumOutEl = document.getElementById("sumOut");
+    const saldoEl = document.getElementById("saldo");
+    const countBadge = document.getElementById("countBadge");
+
+    const form = document.getElementById("entryForm");
+    const typeEl = document.getElementById("type");
+    const amountEl = document.getElementById("amount");
+    const categoryEl = document.getElementById("category");
+    const dateEl = document.getElementById("date");
+    const descEl = document.getElementById("desc");
+
+    const resetBtn = document.getElementById("resetBtn");
+    const wipeBtn = document.getElementById("wipeBtn");
+    const exportBtn = document.getElementById("exportBtn");
+
+    const chartEl = document.getElementById("chart");
+
+    function showMsg(text, kind="ok"){
+      msgEl.style.display = "block";
+      msgEl.textContent = text;
+      if(kind === "ok"){
+        msgEl.style.borderColor = "rgba(49,208,170,.35)";
+        msgEl.style.background = "rgba(49,208,170,.10)";
+      }else{
+        msgEl.style.borderColor = "rgba(255,77,109,.35)";
+        msgEl.style.background = "rgba(255,77,109,.10)";
+      }
+      clearTimeout(showMsg._t);
+      showMsg._t = setTimeout(()=>{ msgEl.style.display="none"; }, 2400);
+    }
+
+    // ---------- Pay-period logic (13 -> 12) ----------
+    function periodForDate(d){
+      const y = d.getFullYear();
+      const m = d.getMonth();
+      const day = d.getDate();
+
+      let start, end;
+      if(day >= 13){
+        start = new Date(y, m, 13);
+        end = new Date(y, m+1, 12);
+      }else{
+        start = new Date(y, m-1, 13);
+        end = new Date(y, m, 12);
+      }
+      return {
+        key: `${toISO(start)}_${toISO(end)}`,
+        startISO: toISO(start),
+        endISO: toISO(end)
+      };
+    }
+
+    function labelForPeriodKey(key){
+      const [startISO, endISO] = key.split("_");
+      const s = fromISO(startISO);
+      const e = fromISO(endISO);
+      return `${s.toLocaleDateString("de-DE")} – ${e.toLocaleDateString("de-DE")}`;
+    }
+
+    // ---------- IndexedDB (UNCHANGED NAMES) ----------
+    const DB_NAME = "budgetlila_db_v3";       // <-- DO NOT CHANGE
+    const STORE_ENTRIES = "entries";          // <-- DO NOT CHANGE
+    const STORE_META = "meta";                // <-- DO NOT CHANGE
+    const STORE_ARCHIVES = "archives";        // <-- DO NOT CHANGE (we only add snapshots)
+
+    let db = null;
+    let entries = []; // cached in memory
+
+    function openDB(){
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const d = req.result;
+          if(!d.objectStoreNames.contains(STORE_ENTRIES)){
+            d.createObjectStore(STORE_ENTRIES, { keyPath: "id" });
+          }
+          if(!d.objectStoreNames.contains(STORE_META)){
+            d.createObjectStore(STORE_META, { keyPath: "key" });
+          }
+          if(!d.objectStoreNames.contains(STORE_ARCHIVES)){
+            d.createObjectStore(STORE_ARCHIVES, { keyPath: "periodKey" });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function tx(store, mode, fn){
+      return new Promise((resolve, reject) => {
+        try{
+          const t = db.transaction(store, mode);
+          const s = t.objectStore(store);
+          const result = fn(s);
+          t.oncomplete = () => resolve(result);
+          t.onerror = () => reject(t.error);
+        }catch(err){ reject(err); }
+      });
+    }
+
+    async function metaGet(key){
+      return await tx(STORE_META, "readonly", (s) =>
+        new Promise((res, rej) => {
+          const r = s.get(key);
+          r.onsuccess = () => res(r.result ? r.result.value : null);
+          r.onerror = () => rej(r.error);
+        })
+      );
+    }
+
+    async function metaSet(key, value){
+      await tx(STORE_META, "readwrite", (s) => s.put({ key, value }));
+    }
+
+    async function entriesGetAll(){
+      const items = [];
+      await tx(STORE_ENTRIES, "readonly", (s) =>
+        new Promise((resolve, reject) => {
+          const r = s.openCursor();
+          r.onsuccess = () => {
+            const cur = r.result;
+            if(cur){ items.push(cur.value); cur.continue(); }
+            else resolve();
+          };
+          r.onerror = () => reject(r.error);
+        })
+      );
+      return items;
+    }
+
+    async function entryPut(entry){
+      await tx(STORE_ENTRIES, "readwrite", (s) => s.put(entry));
+    }
+
+    async function entryDelete(id){
+      await tx(STORE_ENTRIES, "readwrite", (s) => s.delete(id));
+    }
+
+    async function archiveSave(periodKey, dataObj){
+      // Only adds snapshots; does NOT alter entries
+      await tx(STORE_ARCHIVES, "readwrite", (s) => s.put({
+        periodKey,
+        createdAt: Date.now(),
+        json: dataObj
+      }));
+    }
+
+    async function archiveExists(periodKey){
+      return await tx(STORE_ARCHIVES, "readonly", (s) =>
+        new Promise((res, rej) => {
+          const r = s.get(periodKey);
+          r.onsuccess = () => res(!!r.result);
+          r.onerror = () => rej(r.error);
+        })
+      );
+    }
+
+    // ---------- Persons ----------
+    // Existing entries without personId will be treated as "andre" (default) without writing back.
+    const DEFAULT_PEOPLE = [
+      { id: "andre", name: "André" },
+      { id: "vici", name: "Vici" }
+    ];
+
+    async function peopleGet(){
+      let people = await metaGet("people");
+      if(!people || !Array.isArray(people) || people.length === 0){
+        people = DEFAULT_PEOPLE;
+        await metaSet("people", people);
+      }
+      return people;
+    }
+
+    async function activePersonGet(){
+      let p = await metaGet("activePersonId");
+      if(!p){
+        p = "andre";
+        await metaSet("activePersonId", p);
+      }
+      return p;
+    }
+
+    async function activePersonSet(id){
+      await metaSet("activePersonId", id);
+    }
+
+    async function ensurePersonOptions(selectedId){
+      const people = await peopleGet();
+      personSelect.innerHTML = "";
+      people.forEach(p=>{
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        personSelect.appendChild(opt);
+      });
+      const ok = people.some(p=>p.id===selectedId);
+      personSelect.value = ok ? selectedId : people[0].id;
+    }
+
+    function currentPersonId(){
+      return personSelect.value;
+    }
+
+    // ---------- Period dropdown ----------
+    async function ensurePeriodOptions(selectKey){
+      const keysSet = new Set();
+
+      // include periods from entries (any person)
+      entries.forEach(e => {
+        if(e && e.periodKey) keysSet.add(e.periodKey);
+      });
+
+      // always include current period
+      keysSet.add(periodForDate(new Date()).key);
+
+      // include archived periods too (optional)
+      const archivedKeys = [];
+      await tx(STORE_ARCHIVES, "readonly", (s) =>
+        new Promise((resolve, reject) => {
+          const r = s.openCursor();
+          r.onsuccess = () => {
+            const cur = r.result;
+            if(cur){ archivedKeys.push(cur.value.periodKey); cur.continue(); }
+            else resolve();
+          };
+          r.onerror = () => reject(r.error);
+        })
+      );
+      archivedKeys.forEach(k => keysSet.add(k));
+
+      const keys = Array.from(keysSet).sort((a,b)=> b.localeCompare(a));
+      periodSelect.innerHTML = "";
+      keys.forEach(k=>{
+        const opt = document.createElement("option");
+        opt.value = k;
+        opt.textContent = labelForPeriodKey(k);
+        periodSelect.appendChild(opt);
+      });
+
+      periodSelect.value = keys.includes(selectKey) ? selectKey : keys[0];
+    }
+
+    function currentPeriodKey(){
+      return periodSelect.value;
+    }
+
+    // ---------- Data selection ----------
+    function getEntryPersonId(e){
+      // Do NOT write back! Just interpret.
+      return e.personId ? e.personId : "andre";
+    }
+
+    function periodEntries(periodKey){
+      const pid = currentPersonId();
+      return entries
+        .filter(e => e.periodKey === periodKey && getEntryPersonId(e) === pid)
+        .sort((a,b) => b.date.localeCompare(a.date));
+    }
+
+    // ---------- Totals & render ----------
+    function calcTotals(items){
+      const sumIn = items.filter(e=>e.type==="in").reduce((a,e)=>a+e.amount,0);
+      const sumOut = items.filter(e=>e.type==="out").reduce((a,e)=>a+e.amount,0);
+      return { sumIn, sumOut, saldo: sumIn - sumOut };
+    }
+
+    function render(){
+      const pk = currentPeriodKey();
+      const items = periodEntries(pk);
+
+      const {sumIn, sumOut, saldo} = calcTotals(items);
+
+      sumInEl.textContent = EUR.format(sumIn);
+      sumOutEl.textContent = EUR.format(sumOut);
+      saldoEl.textContent = EUR.format(saldo);
+      saldoEl.classList.toggle("ok", saldo >= 0);
+      saldoEl.classList.toggle("bad", saldo < 0);
+
+      countBadge.textContent = `${items.length} Einträge`;
+
+      listEl.innerHTML = "";
+      if(items.length === 0){
+        const d = document.createElement("div");
+        d.className = "empty";
+        d.textContent = "Noch keine Einträge in diesem Zeitraum 🙂";
+        listEl.appendChild(d);
+        drawCharts(sumIn, sumOut, saldo);
+        return;
+      }
+
+      items.forEach(e=>{
+        const item = document.createElement("div");
+        item.className = "item";
+
+        const dot = document.createElement("div");
+        dot.className = "dot " + (e.type==="in" ? "in" : "out");
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const line1 = document.createElement("div");
+        line1.className = "line1";
+
+        const amount = document.createElement("div");
+        amount.className = "amount";
+        amount.textContent = (e.type==="in" ? "+ " : "− ") + EUR.format(e.amount);
+
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = e.category;
+
+        const date = document.createElement("div");
+        date.className = "date";
+        date.textContent = new Date(e.date).toLocaleDateString("de-DE");
+
+        line1.appendChild(amount);
+        line1.appendChild(badge);
+        line1.appendChild(date);
+
+        const desc = document.createElement("div");
+        desc.className = "desc";
+        desc.textContent = e.desc ? e.desc : "—";
+
+        meta.appendChild(line1);
+        meta.appendChild(desc);
+
+        const actions = document.createElement("div");
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "iconbtn";
+        del.textContent = "Löschen";
+        del.addEventListener("click", async () => {
+          await entryDelete(e.id);
+          entries = entries.filter(x => x.id !== e.id);
+          render();
+          showMsg("Eintrag gelöscht.", "ok");
+        });
+        actions.appendChild(del);
+
+        item.appendChild(dot);
+        item.appendChild(meta);
+        item.appendChild(actions);
+        listEl.appendChild(item);
+      });
+
+      drawCharts(sumIn, sumOut, saldo);
+    }
+
+    // ---------- Chart (simple bars) ----------
+    function roundRect(ctx, x, y, w, h, r){
+      const rr = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+rr, y);
+      ctx.arcTo(x+w, y, x+w, y+h, rr);
+      ctx.arcTo(x+w, y+h, x, y+h, rr);
+      ctx.arcTo(x, y+h, x, y, rr);
+      ctx.arcTo(x, y, x+w, y, rr);
+      ctx.closePath();
+    }
+
+    function drawCharts(sumIn, sumOut, saldo){
+      const ctx = chartEl.getContext("2d");
+
+      // crisp on iPad
+      const cssW = chartEl.clientWidth;
+      const cssH = 160;
+      const dpr = window.devicePixelRatio || 1;
+      chartEl.width = Math.floor(cssW * dpr);
+      chartEl.height = Math.floor(cssH * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      ctx.clearRect(0,0,cssW,cssH);
+
+      const pk = currentPeriodKey();
+      const personName = personSelect.options[personSelect.selectedIndex]?.text || "";
+      const title = `${personName} • ${labelForPeriodKey(pk)}`;
+
+      ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillStyle = "rgba(255,255,255,.78)";
+      ctx.fillText(title, 12, 18);
+
+      const data = [
+        { label:"Einnahmen", value: sumIn, fill:"rgba(165,92,255,.35)" },
+        { label:"Ausgaben", value: sumOut, fill:"rgba(255,77,109,.30)" },
+        { label:"Saldo", value: Math.abs(saldo), fill: (saldo >= 0 ? "rgba(49,208,170,.30)" : "rgba(255,77,109,.30)"), saldo }
+      ];
+
+      const max = Math.max(1, ...data.map(d=>d.value));
+      const pad = 12;
+      const gap = 10;
+      const barW = (cssW - pad*2 - gap*(data.length-1)) / data.length;
+      const baseY = 112;
+      const maxH = 70;
+
+      data.forEach((d, i)=>{
+        const x = pad + i*(barW+gap);
+        const h = (d.value / max) * maxH;
+        const y = baseY - h;
+
+        // bar
+        ctx.fillStyle = d.fill;
+        ctx.strokeStyle = "rgba(255,255,255,.10)";
+        roundRect(ctx, x, y, barW, h, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        // value
+        ctx.fillStyle = "rgba(255,255,255,.88)";
+        let valText;
+        if(d.label === "Saldo"){
+          if(d.saldo < 0) valText = "− " + EUR.format(Math.abs(d.saldo));
+          else valText = "+ " + EUR.format(Math.abs(d.saldo));
+        }else{
+          valText = EUR.format(d.value);
+        }
+        ctx.fillText(valText, x, baseY + 20);
+
+        // label
+        ctx.fillStyle = "rgba(255,255,255,.65)";
+        ctx.fillText(d.label, x, baseY + 38);
+      });
+    }
+
+    // ---------- Auto-archive (NO DELETION) ----------
+    async function autoArchiveIfNeeded(){
+      const todayPeriod = periodForDate(new Date()).key;
+      const lastActive = await metaGet("activePeriodKey");
+
+      if(!lastActive){
+        await metaSet("activePeriodKey", todayPeriod);
+        return;
+      }
+
+      if(lastActive !== todayPeriod){
+        // Save snapshot if not already saved.
+        const already = await archiveExists(lastActive);
+        if(!already){
+          const snapshot = {
+            periodKey: lastActive,
+            label: labelForPeriodKey(lastActive),
+            createdAt: new Date().toISOString(),
+            // Snapshot includes ALL people’s entries for that period (no deletion, just snapshot)
+            entries: entries.filter(e => e.periodKey === lastActive),
+          };
+          await archiveSave(lastActive, snapshot);
+        }
+
+        // IMPORTANT: We do NOT delete anything.
+        await metaSet("activePeriodKey", todayPeriod);
+        showMsg("Neuer Zeitraum gestartet ✅ (Daten bleiben erhalten)", "ok");
+      }
+    }
+
+    // ---------- Events ----------
+    function resetForm(){
+      typeEl.value = "out";
+      amountEl.value = "";
+      categoryEl.selectedIndex = 0;
+      dateEl.value = toISO(new Date());
+      descEl.value = "";
+      amountEl.focus();
+    }
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+
+      const amount = parseAmount(amountEl.value);
+      const category = categoryEl.value;
+      const date = dateEl.value;
+      const type = typeEl.value;
+      const desc = (descEl.value || "").trim();
+
+      if(amount === null){ showMsg("Betrag bitte korrekt (z.B. 12,50).", "err"); amountEl.focus(); return; }
+      if(!category){ showMsg("Bitte Kategorie auswählen.", "err"); categoryEl.focus(); return; }
+      if(!date){ showMsg("Bitte Datum auswählen.", "err"); dateEl.focus(); return; }
+
+      const pk = periodForDate(fromISO(date)).key;
+
+      const entry = {
+        id: genId(),
+        type,
+        amount,
+        category,
+        desc,
+        date,
+        periodKey: pk,
+        personId: currentPersonId() // new field; old entries remain untouched
+      };
+
+      await entryPut(entry);
+      entries.push(entry);
+
+      // ensure dropdowns show the period
+      await ensurePeriodOptions(pk);
+      periodSelect.value = pk;
+
+      render();
+
+      amountEl.value = "";
+      descEl.value = "";
+      categoryEl.selectedIndex = 0;
+      amountEl.focus();
+
+      showMsg("Gespeichert ✅", "ok");
+    });
+
+    resetBtn.addEventListener("click", () => { resetForm(); showMsg("Zurückgesetzt.", "ok"); });
+
+    personSelect.addEventListener("change", async () => {
+      await activePersonSet(currentPersonId());
+      render();
+    });
+
+    periodSelect.addEventListener("change", () => render());
+
+    exportBtn.addEventListener("click", async () => {
+      const pk = currentPeriodKey();
+      const pid = currentPersonId();
+      const items = periodEntries(pk);
+      const payload = {
+        periodKey: pk,
+        label: labelForPeriodKey(pk),
+        personId: pid,
+        personName: personSelect.options[personSelect.selectedIndex]?.text || pid,
+        exportedAt: new Date().toISOString(),
+        totals: calcTotals(items),
+        entries: items
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `budgetlila_${pid}_${pk}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      showMsg("Export gestartet.", "ok");
+    });
+
+    wipeBtn.addEventListener("click", async () => {
+      // This DOES delete data (explicit user action). Keep as-is.
+      if(!confirm("Wirklich ALLES löschen? (Einträge + Archive)")) return;
+
+      await tx(STORE_ENTRIES, "readwrite", (s) => s.clear());
+      await tx(STORE_ARCHIVES, "readwrite", (s) => s.clear());
+      await tx(STORE_META, "readwrite", (s) => s.clear());
+
+      entries = [];
+
+      await ensurePersonOptions("andre");
+      await activePersonSet("andre");
+
+      const cur = periodForDate(new Date()).key;
+      await metaSet("activePeriodKey", cur);
+      await ensurePeriodOptions(cur);
+      periodSelect.value = cur;
+
+      render();
+      showMsg("Alles gelöscht.", "ok");
+    });
+
+    // ---------- Init ----------
+    (async function init(){
+      dateEl.value = toISO(new Date());
+
+      db = await openDB();
+      entries = await entriesGetAll();
+
+      // persons
+      const activePerson = await activePersonGet();
+      await ensurePersonOptions(activePerson);
+
+      // period auto-archive (no deletion)
+      await autoArchiveIfNeeded();
+
+      const activePeriod = await metaGet("activePeriodKey") || periodForDate(new Date()).key;
+      await ensurePeriodOptions(activePeriod);
+      periodSelect.value = activePeriod;
+
+      render();
+    })();
+
+  })();
+  </script>
+</body>
+</html>
